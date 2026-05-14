@@ -449,3 +449,18 @@ textarea {
   flex-shrink: 0;
   color: var(--text);
 }
+
+@media (max-width: 600px) {
+  body {
+    padding: 0;
+    background: #fff;
+  }
+
+  .app {
+    max-width: 100%;
+    width: 100%;
+    min-height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
