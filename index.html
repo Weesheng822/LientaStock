@@ -186,14 +186,43 @@
   <div class="divider"></div>
 
   <div class="recent-section">
-    <div class="recent-title">Recent Transactions</div>
+
+  <div style="
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:12px;
+  ">
+
+    <div class="recent-title">
+      Recent Transactions
+    </div>
+
+    <button
+      class="icon-btn"
+      onclick="toggleRecentTransactions()"
+      title="Toggle Recent Transactions"
+    >
+      <i class="ti ti-history-toggle"></i>
+    </button>
+
+  </div>
+
+  <div id="recentListWrapper" style="display:none;">
 
     <div id="recentList">
-      <div style="font-size:13px; color:var(--text2); padding:8px 0;">
+      <div style="
+        font-size:13px;
+        color:var(--text2);
+        padding:8px 0;
+      ">
         No records yet.
       </div>
     </div>
+
   </div>
+
+</div>
 
 </div>
 <script src="./script.js"></script>
