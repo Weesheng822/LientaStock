@@ -829,3 +829,14 @@ function parseRecordDate(value) {
 
   return d;
 }
+
+function toggleRecentTransactions() {
+
+  const wrapper =
+    document.getElementById('recentListWrapper');
+
+  wrapper.style.display =
+    wrapper.style.display === 'none'
+      ? 'block'
+      : 'none';
+}
