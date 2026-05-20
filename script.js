@@ -6,22 +6,22 @@ const searchInput = document.getElementById('searchItem');
 let allItems = [];
 
 window.onload = function () {
-  document.getElementById('type').addEventListener('change', updateTypeBadge);
-  document.getElementById('submittedBy').addEventListener('change', toggleOtherSubmitter);
-  document.getElementById('technician').addEventListener('change', toggleOtherTechnician);
-
-  if (document.getElementById('exportMode')) {
-    document.getElementById('exportMode').addEventListener('change', toggleExportFilters);
-  }
-
-  itemSelect.addEventListener('change', showStock);
-
   const today = new Date().toISOString().split('T')[0];
 
   document.getElementById('date').value = today;
 
   if (document.getElementById('exportDate')) {
     document.getElementById('exportDate').value = today;
+  }
+
+  itemSelect.addEventListener('change', showStock);
+  searchInput.addEventListener('input', filterItems);
+
+  document.getElementById('submittedBy').addEventListener('change', toggleOtherSubmitter);
+  document.getElementById('technician').addEventListener('change', toggleOtherTechnician);
+
+  if (document.getElementById('exportMode')) {
+    document.getElementById('exportMode').addEventListener('change', toggleExportFilters);
   }
 
   updateTypeBadge();
@@ -33,13 +33,10 @@ async function loadItems() {
     const response = await fetch(WEB_APP_URL);
     const data = await response.json();
 
-    const items = data.items || [];
-    const technicians = data.technicians || [];
+    allItems = data.items || [];
 
-    allItems = items;
-
-    renderItems(items);
-    renderTechnicians(technicians);
+    renderItems(allItems);
+    renderTechnicians(data.technicians || []);
     renderRecentTransactions(data.recentTransactions || []);
 
     renderDashboard(data.dashboard || {
@@ -55,6 +52,38 @@ async function loadItems() {
   } catch (error) {
     console.error('Failed to load inventory data:', error);
     alert('Failed to load inventory data. Please check Apps Script URL or permission.');
+  }
+}
+
+function selectType(btn) {
+  const val = btn.dataset.val;
+
+  document.getElementById('type').value = val;
+
+  document.querySelectorAll('.type-btn').forEach(b => {
+    b.className = 'type-btn';
+
+    if (b === btn) {
+      if (val === 'IN') b.className += ' active-in';
+      else if (val === 'OUT') b.className += ' active-out';
+      else if (val === 'RETURN') b.className += ' active-ret';
+      else if (val === 'ADJUST_IN') b.className += ' active-adj-in';
+      else if (val === 'ADJUST_OUT') b.className += ' active-adj-out';
+    }
+  });
+
+  updateTypeBadge();
+}
+
+function updateTypeBadge() {
+  const type = document.getElementById('type').value;
+  const passwordSection = document.getElementById('adjustPasswordSection');
+
+  if (type === 'ADJUST_IN' || type === 'ADJUST_OUT') {
+    passwordSection.style.display = 'block';
+  } else {
+    passwordSection.style.display = 'none';
+    document.getElementById('adjustPassword').value = '';
   }
 }
 
@@ -137,7 +166,7 @@ async function submitForm() {
     type,
     itemCode: item.code,
     itemName: item.name,
-    qty: qty,
+    qty,
     technician,
     jobNo: document.getElementById('jobNo').value,
     remark: document.getElementById('remark').value,
@@ -149,7 +178,7 @@ async function submitForm() {
     body: JSON.stringify(payload)
   });
 
-  document.getElementById('successMsg').style.display = 'block';
+  document.getElementById('successMsg').style.display = 'flex';
 
   resetForm();
   await loadItems();
@@ -175,13 +204,10 @@ function resetForm() {
   document.getElementById('otherSubmitter').value = '';
   document.getElementById('otherSubmitter').style.display = 'none';
 
-  document.getElementById('type').value = 'IN';
-  updateTypeBadge();
+  const inBtn = document.querySelector('[data-val="IN"]');
+  if (inBtn) selectType(inBtn);
 
-  document.getElementById('stockInfo').innerHTML = 'Current Stock: -';
-  document.getElementById('stockInfo').style.background = '#f1f3f4';
-  document.getElementById('stockInfo').style.color = '#000';
-
+  resetStockBox();
   renderItems(allItems);
 }
 
@@ -189,40 +215,35 @@ function showStock() {
   const stockBox = document.getElementById('stockInfo');
 
   if (!itemSelect.value) {
-    stockBox.innerHTML = 'Current Stock: -';
-    stockBox.style.background = '#f1f3f4';
-    stockBox.style.color = '#000';
+    resetStockBox();
     return;
   }
 
   const item = JSON.parse(itemSelect.value);
-
   const currentStock = Number(item.currentStock || 0);
   const minStock = Number(item.minStock || 0);
 
   if (currentStock <= minStock) {
     stockBox.innerHTML =
-      `Current Stock: ${currentStock} ${item.unit || ''}<br>LOW STOCK WARNING`;
-    stockBox.style.background = '#ffebee';
-    stockBox.style.color = '#c62828';
+      `<span class="dot"></span><span>Stock: <strong>${currentStock} ${item.unit || ''}</strong> — Low stock warning</span>`;
+    stockBox.style.background = 'var(--danger-light)';
+    stockBox.style.color = 'var(--danger)';
   } else {
     stockBox.innerHTML =
-      `Current Stock: ${currentStock} ${item.unit || ''}`;
-    stockBox.style.background = '#e8f5e9';
-    stockBox.style.color = '#2e7d32';
+      `<span class="dot"></span><span>Stock: <strong>${currentStock} ${item.unit || ''}</strong> — OK</span>`;
+    stockBox.style.background = 'var(--success-light)';
+    stockBox.style.color = 'var(--success)';
   }
 }
 
-function updateTypeBadge() {
-  const type = document.getElementById('type').value;
-  const passwordSection = document.getElementById('adjustPasswordSection');
+function resetStockBox() {
+  const stockBox = document.getElementById('stockInfo');
 
-  if (type === 'ADJUST_IN' || type === 'ADJUST_OUT') {
-    passwordSection.style.display = 'block';
-  } else {
-    passwordSection.style.display = 'none';
-    document.getElementById('adjustPassword').value = '';
-  }
+  stockBox.innerHTML =
+    '<span class="dot" style="background:rgba(0,0,0,0.2)"></span><span>Select an item to see stock level</span>';
+
+  stockBox.style.background = 'var(--neutral)';
+  stockBox.style.color = 'var(--text2)';
 }
 
 function toggleOtherSubmitter() {
@@ -250,7 +271,7 @@ function renderItems(items) {
   });
 }
 
-searchInput.addEventListener('input', () => {
+function filterItems() {
   const keyword = searchInput.value.toLowerCase();
 
   const filtered = allItems.filter(item =>
@@ -260,94 +281,6 @@ searchInput.addEventListener('input', () => {
   );
 
   renderItems(filtered);
-});
-
-function renderRecentTransactions(records) {
-  const container = document.getElementById('recentList');
-
-  if (!records.length) {
-    container.innerHTML = 'No records yet.';
-    return;
-  }
-
-  container.innerHTML = '';
-
-  records.forEach(r => {
-    container.innerHTML += `
-      <div style="
-        padding:10px;
-        margin-bottom:10px;
-        background:white;
-        border-radius:10px;
-      ">
-        <b>${r.type}</b>
-        - ${r.itemCode}
-        - ${r.itemName}
-        <br>
-        Qty: ${r.qty}
-        <br>
-        Technician: ${r.technician || '-'}
-      </div>
-    `;
-  });
-}
-
-function toggleDashboard() {
-  const panel = document.getElementById('dashboardPanel');
-
-  panel.style.display =
-    panel.style.display === 'none' || panel.style.display === ''
-      ? 'block'
-      : 'none';
-}
-
-function renderDashboard(data) {
-  document.getElementById('dashboardContent').innerHTML = `
-    <div style="
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    ">
-      <div style="
-        background:white;
-        padding:12px;
-        border-radius:10px;
-      ">
-        <b>Total Items</b><br>
-        ${data.totalItems || 0}
-      </div>
-
-      <div style="
-        background:#ffebee;
-        padding:12px;
-        border-radius:10px;
-        color:#c62828;
-      ">
-        <b>Low Stock</b><br>
-        ${data.lowStockItems || 0}
-      </div>
-
-      <div style="
-        background:#e8f5e9;
-        padding:12px;
-        border-radius:10px;
-        color:#2e7d32;
-      ">
-        <b>Today IN</b><br>
-        ${data.todayIn || 0}
-      </div>
-
-      <div style="
-        background:#e3f2fd;
-        padding:12px;
-        border-radius:10px;
-        color:#1565c0;
-      ">
-        <b>Today OUT</b><br>
-        ${data.todayOut || 0}
-      </div>
-    </div>
-  `;
 }
 
 function renderTechnicians(technicians) {
@@ -382,6 +315,70 @@ function renderTechnicians(technicians) {
   }
 }
 
+function renderRecentTransactions(records) {
+  const container = document.getElementById('recentList');
+
+  if (!records.length) {
+    container.innerHTML =
+      '<div style="font-size:13px; color:var(--text2); padding:8px 0;">No records yet.</div>';
+    return;
+  }
+
+  container.innerHTML = records.map(r => {
+    const cls =
+      r.type === 'IN' ? 'tx-in' :
+      r.type === 'OUT' ? 'tx-out' :
+      r.type === 'RETURN' ? 'tx-ret' :
+      'tx-adj';
+
+    return `
+      <div class="tx-row">
+        <span class="tx-badge ${cls}">${r.type}</span>
+
+        <div class="tx-info">
+          <div class="tx-name">${r.itemCode || ''} - ${r.itemName || ''}</div>
+          <div class="tx-meta">${r.technician || '—'} · ${r.jobNo || '—'}</div>
+        </div>
+
+        <div class="tx-qty">×${r.qty || 0}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleDashboard() {
+  const panel = document.getElementById('dashboardPanel');
+
+  panel.style.display =
+    panel.style.display === 'none' || panel.style.display === ''
+      ? 'block'
+      : 'none';
+}
+
+function renderDashboard(data) {
+  document.getElementById('dashboardContent').innerHTML = `
+    <div class="dash-card">
+      <div class="dash-lbl">Total items</div>
+      <div class="dash-num" style="color:var(--brand);">${data.totalItems || 0}</div>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-lbl">Low stock</div>
+      <div class="dash-num" style="color:var(--danger);">${data.lowStockItems || 0}</div>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-lbl">Today IN</div>
+      <div class="dash-num" style="color:var(--success);">${data.todayIn || 0}</div>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-lbl">Today OUT</div>
+      <div class="dash-num" style="color:var(--danger);">${data.todayOut || 0}</div>
+    </div>
+  `;
+}
+
 function toggleExportFilters() {
   const mode = document.getElementById('exportMode').value;
   const filters = document.getElementById('exportFilters');
@@ -395,70 +392,40 @@ function toggleExportFilters() {
 }
 
 function exportReport() {
+  const mode = document.getElementById('exportMode').value;
+  const selectedDate = document.getElementById('exportDate')?.value;
+  const selectedTech = document.getElementById('exportTechnician')?.value;
 
-  const mode =
-    document.getElementById('exportMode').value;
-
-  const selectedDate =
-    document.getElementById('exportDate')?.value;
-
-  const selectedTech =
-    document.getElementById('exportTechnician')?.value;
-
-  let records =
-    window.allTransactions ||
-    window.todayTransactions ||
-    [];
+  let records = window.allTransactions || window.todayTransactions || [];
 
   if (mode === 'today') {
-
-    const today =
-      new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0];
 
     records = records.filter(r => {
-
-      const d =
-        new Date(r.date)
-        .toISOString()
-        .split('T')[0];
-
+      const d = new Date(r.date).toISOString().split('T')[0];
       return d === today;
-
     });
-
   }
 
   if (mode === 'date') {
-
     if (!selectedDate) {
       alert('Please select date.');
       return;
     }
 
     records = records.filter(r => {
-
-      const d =
-        new Date(r.date)
-        .toISOString()
-        .split('T')[0];
-
+      const d = new Date(r.date).toISOString().split('T')[0];
       return d === selectedDate;
-
     });
-
   }
 
   if (mode === 'technician') {
-
     if (!selectedTech) {
       alert('Please select technician.');
       return;
     }
 
-    records = records.filter(r =>
-      r.technician === selectedTech
-    );
-
+    records = records.filter(r => r.technician === selectedTech);
   }
 
   if (mode === 'summary') {
@@ -467,254 +434,8 @@ function exportReport() {
   }
 
   printTransactionReport(records, mode);
-
 }
 
-function printTransactionReport(records, mode) {
-
-  let html = `
-    <html>
-    <head>
-      <title>Lienta Inventory Report</title>
-
-      <style>
-
-        body {
-          font-family: Arial;
-          padding: 24px;
-        }
-
-        h2 {
-          margin-bottom: 10px;
-        }
-
-        table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-
-        th, td {
-          border: 1px solid #ddd;
-          padding: 8px;
-          font-size: 12px;
-        }
-
-        th {
-          background: #f1f3f4;
-        }
-
-      </style>
-
-    </head>
-
-    <body>
-
-      <h2>
-        Lienta Inventory Report
-      </h2>
-
-      <p>
-        Report Type: ${mode}
-      </p>
-
-      <table>
-
-        <tr>
-          <th>Date</th>
-          <th>Type</th>
-          <th>Item</th>
-          <th>Qty</th>
-          <th>Technician</th>
-          <th>Job No</th>
-          <th>Remark</th>
-          <th>Submitted By</th>
-        </tr>
-  `;
-
-  records.forEach(r => {
-
-    html += `
-      <tr>
-
-        <td>
-          ${formatReportDate(r.date)}
-        </td>
-
-        <td>
-          ${r.type || ''}
-        </td>
-
-        <td>
-          ${r.itemCode || ''} - ${r.itemName || ''}
-        </td>
-
-        <td>
-          ${r.qty || ''}
-        </td>
-
-        <td>
-          ${r.technician || ''}
-        </td>
-
-        <td>
-          ${r.jobNo || ''}
-        </td>
-
-        <td>
-          ${r.remark || ''}
-        </td>
-
-        <td>
-          ${r.submittedBy || ''}
-        </td>
-
-      </tr>
-    `;
-
-  });
-
-  html += `
-      </table>
-
-    </body>
-    </html>
-  `;
-
-  const w =
-    window.open('', '_blank');
-
-  w.document.write(html);
-
-  w.document.close();
-
-  w.print();
-
-}
-
-function exportSummaryReport(records) {
-
-  const summary = {};
-
-  records.forEach(r => {
-
-    if (!r.technician) return;
-
-    if (
-      r.type === 'IN' ||
-      r.type === 'RETURN'
-    ) return;
-
-    const tech = r.technician;
-
-    if (!summary[tech]) {
-      summary[tech] = 0;
-    }
-
-    summary[tech] +=
-      Number(r.qty) || 0;
-
-  });
-
-  let html = `
-    <html>
-
-    <head>
-
-      <title>
-        Lienta Summary Report
-      </title>
-
-      <style>
-
-        body {
-          font-family: Arial;
-          padding: 24px;
-        }
-
-        table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-
-        th, td {
-          border: 1px solid #ddd;
-          padding: 8px;
-          font-size: 12px;
-        }
-
-        th {
-          background: #f1f3f4;
-        }
-
-      </style>
-
-    </head>
-
-    <body>
-
-      <h2>
-        Technician Summary Report
-      </h2>
-
-      <table>
-
-        <tr>
-          <th>Technician</th>
-          <th>Total Qty Used</th>
-        </tr>
-  `;
-
-  Object.keys(summary).forEach(tech => {
-
-    html += `
-      <tr>
-
-        <td>
-          ${tech}
-        </td>
-
-        <td>
-          ${summary[tech]}
-        </td>
-
-      </tr>
-    `;
-
-  });
-
-  html += `
-      </table>
-
-    </body>
-
-    </html>
-  `;
-
-  const w =
-    window.open('', '_blank');
-
-  w.document.write(html);
-
-  w.document.close();
-
-  w.print();
-
-}
-
-function formatReportDate(dateValue) {
-
-  if (!dateValue) return '';
-
-  const d =
-    new Date(dateValue);
-
-  if (isNaN(d)) {
-    return dateValue;
-  }
-
-  return d.toLocaleDateString('en-GB');
-
-}
 function printTransactionReport(records, mode) {
   let html = `
     <html>
@@ -856,35 +577,4 @@ function formatReportDate(dateValue) {
   if (isNaN(d)) return dateValue;
 
   return d.toLocaleDateString('en-GB');
-}
-function selectType(btn) {
-
-  const val = btn.dataset.val;
-
-  document.getElementById('type').value = val;
-
-  document.querySelectorAll('.type-btn').forEach(b => {
-    b.className = 'type-btn';
-
-    if (b === btn) {
-
-      if (val === 'IN') {
-        b.className += ' active-in';
-
-      } else if (val === 'OUT') {
-        b.className += ' active-out';
-
-      } else if (val === 'RETURN') {
-        b.className += ' active-ret';
-
-      } else if (val === 'ADJUST_IN') {
-        b.className += ' active-adj-in';
-
-      } else if (val === 'ADJUST_OUT') {
-        b.className += ' active-adj-out';
-      }
-    }
-  });
-
-  updateTypeBadge();
 }
