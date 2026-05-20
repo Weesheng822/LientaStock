@@ -380,126 +380,81 @@ function renderDashboard(data) {
 }
 
 function toggleExportFilters() {
-
-  const mode =
-    document.getElementById('exportMode').value;
-
-  const filters =
-    document.getElementById('exportFilters');
+  const mode = document.getElementById('exportMode').value;
+  const filters = document.getElementById('exportFilters');
 
   if (!filters) return;
 
   filters.style.display =
-    mode === 'technician'
+    mode === 'firstHalf' || mode === 'secondHalf'
       ? 'block'
       : 'none';
-
 }
 
 function exportReport() {
+  const mode = document.getElementById('exportMode').value;
+  const selectedTech = document.getElementById('exportTechnician')?.value || '';
 
-  const mode =
-    document.getElementById('exportMode').value;
+  let records = window.allTransactions || window.todayTransactions || [];
 
-  const selectedTech =
-    document.getElementById('exportTechnician')?.value;
+  const now = new Date();
+  const month = now.getMonth();
+  const year = now.getFullYear();
 
-  let records =
-    window.allTransactions ||
-    window.todayTransactions ||
-    [];
-
-  // TODAY
   if (mode === 'today') {
-
-    const today =
-      new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0];
 
     records = records.filter(r => {
-
-      const d =
-        new Date(r.date)
-        .toISOString()
-        .split('T')[0];
-
+      const d = new Date(r.date).toISOString().split('T')[0];
       return d === today;
-
     });
 
+    printTransactionReport(records, 'Today');
+    return;
   }
 
-  // FIRST HALF
-  if (mode === 'firstHalf') {
-
+  if (mode === 'firstHalf' || mode === 'secondHalf') {
     records = records.filter(r => {
-
       const d = new Date(r.date);
 
-      const day = d.getDate();
+      if (d.getFullYear() !== year || d.getMonth() !== month) {
+        return false;
+      }
 
-      return day >= 1 && day <= 15;
+      if (mode === 'firstHalf') {
+        return d.getDate() >= 1 && d.getDate() <= 15;
+      }
 
+      return d.getDate() >= 16;
     });
 
-  }
-
-  // SECOND HALF
-  if (mode === 'secondHalf') {
-
-    records = records.filter(r => {
-
-      const d = new Date(r.date);
-
-      const day = d.getDate();
-
-      return day >= 16;
-
-    });
-
-  }
-
-  // TECHNICIAN
-  if (mode === 'technician') {
-
-    if (!selectedTech) {
-
-      alert('Please select technician.');
-
-      return;
-
+    if (selectedTech) {
+      records = filterByTechnician(records, selectedTech);
     }
 
-    records = records.filter(r => {
+    const title = mode === 'firstHalf' ? 'First Half' : 'Second Half';
 
-      const tech1 =
-        (r.technician || '')
-        .toString()
-        .trim()
-        .toLowerCase();
-
-      const tech2 =
-        (selectedTech || '')
-        .toString()
-        .trim()
-        .toLowerCase();
-
-      return tech1 === tech2;
-
-    });
-
-  }
-
-  // SUMMARY
-  if (mode === 'summary') {
-
-    exportSummaryReport(records);
+    printTransactionReport(
+      records,
+      selectedTech ? `${title} - ${selectedTech}` : `${title} - All Technician`
+    );
 
     return;
-
   }
 
-  printTransactionReport(records, mode);
+  if (mode === 'summary') {
+    exportSummaryReport(records);
+    return;
+  }
+}
 
+function filterByTechnician(records, selectedTech) {
+  const selected = selectedTech.toString().trim().toLowerCase();
+
+  return records.filter(r => {
+    const tech = (r.technician || '').toString().trim().toLowerCase();
+    return tech === selected;
+  });
 }
 
 function printTransactionReport(records, mode) {
@@ -644,15 +599,163 @@ function formatReportDate(dateValue) {
 
   return d.toLocaleDateString('en-GB');
 }
-function exportReport() {
-  const mode = document.getElementById('exportMode').value;
 
-  if (mode === 'summary') {
-    exportSummaryReport(window.allTransactions || window.todayTransactions || []);
-    return;
-  }
+function filterByTechnician(records, selectedTech) {
+  const selected = selectedTech
+    .toString()
+    .trim()
+    .toLowerCase();
 
-  const records = window.allTransactions || window.todayTransactions || [];
-  printTransactionReport(records, mode);
+  return records.filter(r => {
+    const tech = (r.technician || '')
+      .toString()
+      .trim()
+      .toLowerCase();
+
+    return tech === selected;
+  });
 }
 
+
+function printTransactionReport(records, mode) {
+  let html = `
+    <html>
+    <head>
+      <title>Lienta Inventory Report</title>
+      <style>
+        body { font-family: Arial; padding: 24px; }
+        h2 { margin-bottom: 8px; }
+        p { margin-bottom: 16px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
+        th { background: #f1f3f4; }
+      </style>
+    </head>
+    <body>
+      <h2>Lienta Inventory Report</h2>
+      <p>Report Type: ${mode}</p>
+
+      <table>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Item</th>
+          <th>Qty</th>
+          <th>Technician</th>
+          <th>Job No</th>
+          <th>Remark</th>
+          <th>Submitted By</th>
+        </tr>
+  `;
+
+  if (!records.length) {
+    html += `
+      <tr>
+        <td colspan="8" style="text-align:center;">No records found</td>
+      </tr>
+    `;
+  }
+
+  records.forEach(r => {
+    html += `
+      <tr>
+        <td>${formatReportDate(r.date)}</td>
+        <td>${r.type || ''}</td>
+        <td>${r.itemCode || ''} - ${r.itemName || ''}</td>
+        <td>${r.qty || ''}</td>
+        <td>${r.technician || ''}</td>
+        <td>${r.jobNo || ''}</td>
+        <td>${r.remark || ''}</td>
+        <td>${r.submittedBy || ''}</td>
+      </tr>
+    `;
+  });
+
+  html += `
+      </table>
+    </body>
+    </html>
+  `;
+
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  w.print();
+}
+
+function exportSummaryReport(records) {
+  const summary = {};
+
+  records.forEach(r => {
+    if (!r.technician) return;
+
+    const tech = r.technician;
+
+    if (!summary[tech]) {
+      summary[tech] = 0;
+    }
+
+    summary[tech] += Number(r.qty) || 0;
+  });
+
+  let html = `
+    <html>
+    <head>
+      <title>Lienta Summary Report</title>
+      <style>
+        body { font-family: Arial; padding: 24px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
+        th { background: #f1f3f4; }
+      </style>
+    </head>
+    <body>
+      <h2>Lienta Inventory Summary Report</h2>
+
+      <table>
+        <tr>
+          <th>Technician</th>
+          <th>Total Qty</th>
+        </tr>
+  `;
+
+  const techNames = Object.keys(summary);
+
+  if (!techNames.length) {
+    html += `
+      <tr>
+        <td colspan="2" style="text-align:center;">No records found</td>
+      </tr>
+    `;
+  }
+
+  techNames.forEach(tech => {
+    html += `
+      <tr>
+        <td>${tech}</td>
+        <td>${summary[tech]}</td>
+      </tr>
+    `;
+  });
+
+  html += `
+      </table>
+    </body>
+    </html>
+  `;
+
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  w.print();
+}
+
+function formatReportDate(dateValue) {
+  if (!dateValue) return '';
+
+  const d = new Date(dateValue);
+
+  if (isNaN(d)) return dateValue;
+
+  return d.toLocaleDateString('en-GB');
+}
