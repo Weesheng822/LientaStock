@@ -14,419 +14,193 @@
   <div class="app">
 
   <!-- Header -->
+  <div class="app">
+
   <div class="app-header">
-    <div class="app-icon"><i class="ti ti-package"></i></div>
+    <div class="app-icon">
+      <i class="ti ti-package"></i>
+    </div>
+
     <div>
       <div class="app-title">Lienta Inventory Record</div>
       <div class="app-sub" id="todayDate"></div>
     </div>
+
     <div class="app-actions">
       <button class="icon-btn" onclick="toggleDashboard()" title="Dashboard">
         <i class="ti ti-chart-bar"></i>
       </button>
-      <button class="icon-btn" onclick="exportDailyReport()" title="Export Daily Report">
+
+      <select id="exportMode" class="icon-btn" style="width:auto; padding:0 8px;">
+        <option value="today">Today</option>
+        <option value="date">Date</option>
+        <option value="technician">Technician</option>
+        <option value="summary">Summary</option>
+      </select>
+
+      <button class="icon-btn" onclick="exportReport()" title="Export Report">
         <i class="ti ti-download"></i>
       </button>
     </div>
   </div>
 
-  <!-- Dashboard (hidden by default) -->
   <div class="dashboard" id="dashboardPanel">
     <div class="dash-label">Today's Overview</div>
+
     <div class="dash-grid" id="dashboardContent">
-      <div class="dash-card"><div class="dash-lbl">Total items</div><div class="dash-num" style="color:var(--brand);">—</div></div>
-      <div class="dash-card"><div class="dash-lbl">Low stock</div><div class="dash-num" style="color:var(--danger);">—</div></div>
-      <div class="dash-card"><div class="dash-lbl">Today IN</div><div class="dash-num" style="color:var(--success);">—</div></div>
-      <div class="dash-card"><div class="dash-lbl">Today OUT</div><div class="dash-num" style="color:var(--danger);">—</div></div>
+      <div class="dash-card">
+        <div class="dash-lbl">Total items</div>
+        <div class="dash-num" style="color:var(--brand);">—</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-lbl">Low stock</div>
+        <div class="dash-num" style="color:var(--danger);">—</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-lbl">Today IN</div>
+        <div class="dash-num" style="color:var(--success);">—</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-lbl">Today OUT</div>
+        <div class="dash-num" style="color:var(--danger);">—</div>
+      </div>
     </div>
   </div>
 
-  <!-- Form -->
+  <div class="dashboard" id="exportFilters" style="display:none;">
+    <div class="dash-label">Export Filters</div>
+
+    <div class="label">Date</div>
+    <input type="date" id="exportDate">
+
+    <div class="label">Technician</div>
+    <select id="exportTechnician">
+      <option value="">All Technician</option>
+    </select>
+  </div>
+
   <div class="section">
 
-    <!-- Transaction Type -->
-    <div class="label">Transaction type</div>
+    <div class="label">Transaction Type</div>
+
     <div class="type-grid" id="typeGrid">
       <button class="type-btn active-in" data-val="IN" onclick="selectType(this)">
         <i class="ti ti-arrow-bar-to-down"></i>IN
       </button>
+
       <button class="type-btn" data-val="OUT" onclick="selectType(this)">
         <i class="ti ti-arrow-bar-up"></i>OUT
       </button>
+
       <button class="type-btn" data-val="RETURN" onclick="selectType(this)">
         <i class="ti ti-refresh"></i>RETURN
       </button>
+
       <button class="type-btn" data-val="ADJUST_IN" onclick="selectType(this)">
         <i class="ti ti-adjustments-horizontal"></i>ADJUST IN
       </button>
+
       <button class="type-btn" data-val="ADJUST_OUT" onclick="selectType(this)">
         <i class="ti ti-adjustments-off"></i>ADJUST OUT
       </button>
     </div>
+
     <input type="hidden" id="type" value="IN">
 
-    <!-- Admin Password (shown for ADJUST only) -->
     <div class="admin-box" id="adjustPasswordSection">
       <div class="admin-label">
-        <i class="ti ti-lock"></i> Admin only — enter password to continue
+        <i class="ti ti-lock"></i>
+        Admin only — enter password to continue
       </div>
+
       <input type="password" id="adjustPassword" placeholder="Admin password">
     </div>
 
-    <!-- Date -->
     <div class="label">Date</div>
     <input type="date" id="date">
 
-    <!-- Search + Item -->
-    <div class="label">Search item</div>
+    <div class="label">Search Item</div>
     <div class="search-wrap">
       <i class="ti ti-search"></i>
       <input type="text" id="searchItem" placeholder="Search by code, name, or category…">
     </div>
-    <div class="label" style="margin-top:8px;">Select item</div>
+
+    <div class="label" style="margin-top:8px;">Select Item</div>
     <select id="item">
       <option value="">Select item</option>
     </select>
 
-    <!-- Stock pill -->
     <div class="stock-pill" id="stockInfo">
       <span class="dot" style="background:rgba(0,0,0,0.2)"></span>
       <span>Select an item to see stock level</span>
     </div>
 
-    <!-- Qty + Job No -->
     <div class="row2">
       <div>
         <div class="label">Quantity</div>
         <input type="number" id="qty" min="1" placeholder="0">
       </div>
+
       <div>
         <div class="label">Job No.</div>
         <input type="text" id="jobNo" placeholder="e.g. JB-0042">
       </div>
     </div>
 
-    <!-- Technician -->
     <div class="label">Technician</div>
     <select id="technician">
       <option value="">Select technician</option>
     </select>
-    <input type="text" id="otherTechnician" placeholder="Enter technician name" style="display:none; margin-top:8px;">
 
-    <!-- Remark -->
+    <input
+      type="text"
+      id="otherTechnician"
+      placeholder="Enter technician name"
+      style="display:none; margin-top:8px;"
+    >
+
     <div class="label">Remark</div>
     <textarea id="remark" placeholder="Optional notes…"></textarea>
 
-    <!-- Submitted By -->
-    <div class="label">Submitted by</div>
+    <div class="label">Submitted By</div>
     <select id="submittedBy">
       <option value="Wilson">Wilson</option>
       <option value="Office">Office</option>
       <option value="Other">Other</option>
     </select>
-    <input type="text" id="otherSubmitter" placeholder="Enter name" style="display:none; margin-top:8px;">
+
+    <input
+      type="text"
+      id="otherSubmitter"
+      placeholder="Enter name"
+      style="display:none; margin-top:8px;"
+    >
 
   </div>
 
-  <!-- Success bar -->
   <div class="success-bar" id="successMsg">
     <i class="ti ti-circle-check"></i>
     Stock record submitted successfully.
   </div>
 
-  <!-- Submit -->
   <button class="submit-btn" onclick="submitForm()">
-    <i class="ti ti-send"></i> Submit record
+    <i class="ti ti-send"></i>
+    Submit record
   </button>
 
-  <!-- Divider -->
   <div class="divider"></div>
 
-  <!-- Recent Transactions -->
   <div class="recent-section">
-    <div class="recent-title">Recent transactions</div>
+    <div class="recent-title">Recent Transactions</div>
+
     <div id="recentList">
-      <div style="font-size:13px; color:var(--text2); padding:8px 0;">No records yet.</div>
+      <div style="font-size:13px; color:var(--text2); padding:8px 0;">
+        No records yet.
+      </div>
     </div>
   </div>
 
 </div>
-
-<script>
-  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwDJjqkTffk1JutreTyODHqboBp1sdta3w-0wM1sQ6NPMnJQ-4ioI_Q6Tbo98lR7iq7/exec';
-
-  const itemSelect = document.getElementById('item');
-  const searchInput = document.getElementById('searchItem');
-  let allItems = [];
-
-  // Set today's date display and date input
-  document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-GB', {
-    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
-  });
-  document.getElementById('date').value = new Date().toISOString().split('T')[0];
-
-  // ─── Type selector ───────────────────────────────────────────────────────────
-  function selectType(btn) {
-    const val = btn.dataset.val;
-    document.getElementById('type').value = val;
-
-    document.querySelectorAll('.type-btn').forEach(b => {
-      b.className = 'type-btn';
-      if (b === btn) {
-        if (val === 'IN')         b.className += ' active-in';
-        else if (val === 'OUT')   b.className += ' active-out';
-        else if (val === 'RETURN') b.className += ' active-ret';
-        else if (val === 'ADJUST_IN')  b.className += ' active-adj-in';
-        else if (val === 'ADJUST_OUT') b.className += ' active-adj-out';
-      }
-    });
-
-    const pw = document.getElementById('adjustPasswordSection');
-    pw.style.display = (val === 'ADJUST_IN' || val === 'ADJUST_OUT') ? 'block' : 'none';
-    if (pw.style.display === 'none') document.getElementById('adjustPassword').value = '';
-  }
-
-  // ─── Stock pill ───────────────────────────────────────────────────────────────
-  itemSelect.addEventListener('change', showStock);
-
-  function showStock() {
-    const pill = document.getElementById('stockInfo');
-    if (!itemSelect.value) {
-      pill.innerHTML = '<span class="dot" style="background:rgba(0,0,0,0.2)"></span><span>Select an item to see stock level</span>';
-      pill.style.background = 'var(--neutral)';
-      pill.style.color = 'var(--text2)';
-      return;
-    }
-    const item = JSON.parse(itemSelect.value);
-    const cur = Number(item.currentStock || 0);
-    const min = Number(item.minStock || 0);
-    if (cur <= min) {
-      pill.innerHTML = `<span class="dot"></span><span>Stock: <strong>${cur} ${item.unit || ''}</strong> — Low stock warning</span>`;
-      pill.style.background = 'var(--danger-light)';
-      pill.style.color = 'var(--danger)';
-    } else {
-      pill.innerHTML = `<span class="dot"></span><span>Stock: <strong>${cur} ${item.unit || ''}</strong> — OK</span>`;
-      pill.style.background = 'var(--success-light)';
-      pill.style.color = 'var(--success)';
-    }
-  }
-
-  // ─── Other pickers ────────────────────────────────────────────────────────────
-  document.getElementById('submittedBy').addEventListener('change', () => {
-    document.getElementById('otherSubmitter').style.display =
-      document.getElementById('submittedBy').value === 'Other' ? 'block' : 'none';
-  });
-
-  document.getElementById('technician').addEventListener('change', () => {
-    document.getElementById('otherTechnician').style.display =
-      document.getElementById('technician').value === 'Other' ? 'block' : 'none';
-  });
-
-  // ─── Search filter ────────────────────────────────────────────────────────────
-  searchInput.addEventListener('input', () => {
-    const kw = searchInput.value.toLowerCase();
-    const filtered = allItems.filter(i =>
-      i.code.toLowerCase().includes(kw) ||
-      i.name.toLowerCase().includes(kw) ||
-      (i.category || '').toLowerCase().includes(kw)
-    );
-    renderItems(filtered);
-  });
-
-  // ─── Render helpers ───────────────────────────────────────────────────────────
-  function renderItems(items) {
-    itemSelect.innerHTML = '<option value="">Select item</option>';
-    items.forEach(item => {
-      const o = document.createElement('option');
-      o.value = JSON.stringify(item);
-      o.textContent = `${item.code} - ${item.name}`;
-      itemSelect.appendChild(o);
-    });
-  }
-
-  function renderTechnicians(technicians) {
-    const s = document.getElementById('technician');
-    s.innerHTML = '<option value="">Select technician</option>';
-    technicians.forEach(name => {
-      const o = document.createElement('option');
-      o.value = name; o.textContent = name;
-      s.appendChild(o);
-    });
-    const other = document.createElement('option');
-    other.value = 'Other'; other.textContent = 'Other';
-    s.appendChild(other);
-  }
-
-  function renderRecentTransactions(records) {
-    const c = document.getElementById('recentList');
-    if (!records.length) {
-      c.innerHTML = '<div style="font-size:13px;color:var(--text2);padding:8px 0;">No records yet.</div>';
-      return;
-    }
-    c.innerHTML = records.map(r => {
-      const cls = r.type === 'IN' ? 'tx-in'
-                : r.type === 'OUT' ? 'tx-out'
-                : r.type === 'RETURN' ? 'tx-ret'
-                : 'tx-adj';
-      return `
-        <div class="tx-row">
-          <span class="tx-badge ${cls}">${r.type}</span>
-          <div class="tx-info">
-            <div class="tx-name">${r.itemCode} - ${r.itemName}</div>
-            <div class="tx-meta">${r.technician || '—'} · ${r.jobNo || '—'}</div>
-          </div>
-          <div class="tx-qty">×${r.qty}</div>
-        </div>`;
-    }).join('');
-  }
-
-  function renderDashboard(data) {
-    document.getElementById('dashboardContent').innerHTML = `
-      <div class="dash-card"><div class="dash-lbl">Total items</div><div class="dash-num" style="color:var(--brand);">${data.totalItems || 0}</div></div>
-      <div class="dash-card"><div class="dash-lbl">Low stock</div><div class="dash-num" style="color:var(--danger);">${data.lowStockItems || 0}</div></div>
-      <div class="dash-card"><div class="dash-lbl">Today IN</div><div class="dash-num" style="color:var(--success);">${data.todayIn || 0}</div></div>
-      <div class="dash-card"><div class="dash-lbl">Today OUT</div><div class="dash-num" style="color:var(--danger);">${data.todayOut || 0}</div></div>
-    `;
-  }
-
-  // ─── Load data ────────────────────────────────────────────────────────────────
-  async function loadItems() {
-    try {
-      const res = await fetch(WEB_APP_URL);
-      const data = await res.json();
-
-      allItems = data.items || [];
-      renderItems(allItems);
-      renderTechnicians(data.technicians || []);
-      renderRecentTransactions(data.recentTransactions || []);
-      renderDashboard(data.dashboard || { totalItems: 0, lowStockItems: 0, todayIn: 0, todayOut: 0 });
-      window.todayTransactions = data.todayTransactions || [];
-    } catch (e) {
-      console.error('Failed to load inventory data:', e);
-      alert('Failed to load inventory data. Please check the Apps Script URL or permission.');
-    }
-  }
-
-  // ─── Toggle dashboard ─────────────────────────────────────────────────────────
-  function toggleDashboard() {
-    const p = document.getElementById('dashboardPanel');
-    p.style.display = (p.style.display === 'none' || !p.style.display) ? 'block' : 'none';
-  }
-
-  // ─── Submit ───────────────────────────────────────────────────────────────────
-  async function submitForm() {
-    if (!itemSelect.value) { alert('Please select an item.'); return; }
-
-    const qty = document.getElementById('qty').value;
-    if (!qty || Number(qty) <= 0) { alert('Please enter a valid quantity.'); return; }
-
-    const item = JSON.parse(itemSelect.value);
-    const type = document.getElementById('type').value;
-
-    if (type === 'OUT' && Number(qty) > Number(item.currentStock || 0)) {
-      alert(`Not enough stock.\n\nCurrent: ${item.currentStock || 0} ${item.unit || ''}\nRequested: ${qty}`);
-      return;
-    }
-
-    const submittedByRaw = document.getElementById('submittedBy').value;
-    const submittedBy = submittedByRaw === 'Other'
-      ? document.getElementById('otherSubmitter').value.trim()
-      : submittedByRaw;
-
-    if (submittedByRaw === 'Other' && !submittedBy) {
-      alert('Please enter your name.'); return;
-    }
-
-    if ((type === 'ADJUST_IN' || type === 'ADJUST_OUT') &&
-        submittedBy !== 'Wilson' && submittedBy !== 'Office') {
-      alert('Only Wilson or Office can use ADJUST.'); return;
-    }
-
-    if ((type === 'ADJUST_IN' || type === 'ADJUST_OUT') &&
-        document.getElementById('adjustPassword').value !== 'Lienta@0615') {
-      alert('Invalid admin password.'); return;
-    }
-
-    const confirmed = confirm(
-      `Confirm submit?\n\nType: ${type}\nItem: ${item.code} - ${item.name}\nQty: ${qty}`
-    );
-    if (!confirmed) return;
-
-    const payload = {
-      date: document.getElementById('date').value,
-      type,
-      itemCode: item.code,
-      itemName: item.name,
-      qty,
-      technician: document.getElementById('technician').value === 'Other'
-        ? document.getElementById('otherTechnician').value
-        : document.getElementById('technician').value,
-      jobNo: document.getElementById('jobNo').value,
-      remark: document.getElementById('remark').value,
-      submittedBy
-    };
-
-    await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-
-    // Show success
-    const bar = document.getElementById('successMsg');
-    bar.style.display = 'flex';
-    setTimeout(() => bar.style.display = 'none', 3000);
-
-    // Reset form
-    ['qty', 'jobNo', 'remark', 'adjustPassword', 'searchItem', 'otherSubmitter', 'otherTechnician']
-      .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-    document.getElementById('otherTechnician').style.display = 'none';
-    document.getElementById('otherSubmitter').style.display = 'none';
-    document.getElementById('adjustPasswordSection').style.display = 'none';
-    document.getElementById('item').value = '';
-    document.getElementById('submittedBy').value = 'Wilson';
-    selectType(document.querySelector('[data-val="IN"]'));
-    showStock();
-
-    loadItems();
-  }
-
-  // ─── Export ───────────────────────────────────────────────────────────────────
-  function exportDailyReport() {
-    const records = window.todayTransactions || [];
-    let html = `
-      <html><head><title>Daily Inventory Report</title>
-      <style>
-        body { font-family: Arial; padding: 24px; }
-        h2 { margin-bottom: 16px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
-        th { background: #f1f3f4; }
-      </style></head><body>
-      <h2>Lienta Daily Inventory Report</h2>
-      <table>
-        <tr><th>Type</th><th>Item</th><th>Qty</th><th>Technician</th><th>Job No</th><th>Remark</th><th>By</th></tr>`;
-    records.forEach(r => {
-      html += `<tr>
-        <td>${r.type}</td>
-        <td>${r.itemCode} - ${r.itemName}</td>
-        <td>${r.qty}</td>
-        <td>${r.technician || ''}</td>
-        <td>${r.jobNo || ''}</td>
-        <td>${r.remark || ''}</td>
-        <td>${r.submittedBy || ''}</td>
-      </tr>`;
-    });
-    html += `</table></body></html>`;
-    const w = window.open('', '_blank');
-    w.document.write(html);
-    w.document.close();
-    w.print();
-  }
-
-  // ─── Init ─────────────────────────────────────────────────────────────────────
-  loadItems();
-</script>
-</body>
-</html>
-    <script  src="./script.js"></script>
-
-  </body>
-  
-</html>
