@@ -402,31 +402,47 @@ function exportReport() {
   const year = now.getFullYear();
 
   if (mode === 'today') {
-    const today = new Date().toISOString().split('T')[0];
+  const today = new Date();
 
-    records = records.filter(r => {
-      const d = new Date(r.date).toISOString().split('T')[0];
-      return d === today;
-    });
+  records = records.filter(r => {
+    const d = parseRecordDate(r.date);
 
-    printTransactionReport(records, 'Today');
-    return;
-  }
+    if (!d) return false;
+
+    return (
+      d.getFullYear() === today.getFullYear() &&
+      d.getMonth() === today.getMonth() &&
+      d.getDate() === today.getDate()
+    );
+  });
+
+  printTransactionReport(records, 'Today');
+  return;
+}
 
   if (mode === 'firstHalf' || mode === 'secondHalf') {
     records = records.filter(r => {
-      const d = new Date(r.date);
+  const d = parseRecordDate(r.date);
 
-      if (d.getFullYear() !== year || d.getMonth() !== month) {
-        return false;
-      }
+  if (!d) return false;
 
-      if (mode === 'firstHalf') {
-        return d.getDate() >= 1 && d.getDate() <= 15;
-      }
+  if (
+    d.getFullYear() !== year ||
+    d.getMonth() !== month
+  ) {
+    return false;
+  }
 
-      return d.getDate() >= 16;
-    });
+  if (mode === 'firstHalf') {
+    return d.getDate() >= 1 && d.getDate() <= 15;
+  }
+
+  if (mode === 'secondHalf') {
+    return d.getDate() >= 16 && d <= now;
+  }
+
+  return false;
+});
 
     if (selectedTech) {
       records = filterByTechnician(records, selectedTech);
@@ -456,6 +472,13 @@ function filterByTechnician(records, selectedTech) {
     return tech === selected;
   });
 }
+function isAdditionalPipeRemark(remark) {
+  return (remark || '')
+    .toString()
+    .toLowerCase()
+    .includes('additional pipe');
+}
+
 
 function printTransactionReport(records, mode) {
   let html = `
@@ -497,19 +520,25 @@ function printTransactionReport(records, mode) {
   }
 
   records.forEach(r => {
-    html += `
-      <tr>
-        <td>${formatReportDate(r.date)}</td>
-        <td>${r.type || ''}</td>
-        <td>${r.itemCode || ''} - ${r.itemName || ''}</td>
-        <td>${r.qty || ''}</td>
-        <td>${r.technician || ''}</td>
-        <td>${r.jobNo || ''}</td>
-        <td>${r.remark || ''}</td>
-        <td>${r.submittedBy || ''}</td>
-      </tr>
-    `;
-  });
+
+  const highlightRow =
+    isAdditionalPipeRemark(r.remark)
+      ? 'background:#fff3cd; color:#856404; font-weight:bold;'
+      : '';
+
+  html += `
+    <tr style="${highlightRow}">
+      <td>${formatReportDate(r.date)}</td>
+      <td>${r.type || ''}</td>
+      <td>${r.itemCode || ''} - ${r.itemName || ''}</td>
+      <td>${r.qty || ''}</td>
+      <td>${r.technician || ''}</td>
+      <td>${r.jobNo || ''}</td>
+      <td>${r.remark || ''}</td>
+      <td>${r.submittedBy || ''}</td>
+    </tr>
+  `;
+});
 
   html += `
       </table>
@@ -629,6 +658,11 @@ function printTransactionReport(records, mode) {
         table { width: 100%; border-collapse: collapse; }
         th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
         th { background: #f1f3f4; }
+        .highlight td {
+          background: #fff3cd !important;
+          color: #856404 !important;
+          font-weight: bold !important;
+        }
       </style>
     </head>
     <body>
@@ -657,8 +691,10 @@ function printTransactionReport(records, mode) {
   }
 
   records.forEach(r => {
+    const rowClass = isAdditionalPipeRemark(r.remark) ? 'highlight' : '';
+
     html += `
-      <tr>
+      <tr class="${rowClass}">
         <td>${formatReportDate(r.date)}</td>
         <td>${r.type || ''}</td>
         <td>${r.itemCode || ''} - ${r.itemName || ''}</td>
@@ -681,6 +717,13 @@ function printTransactionReport(records, mode) {
   w.document.write(html);
   w.document.close();
   w.print();
+}
+
+function isAdditionalPipeRemark(remark) {
+  return (remark || '')
+    .toString()
+    .toLowerCase()
+    .includes('additional pipe');
 }
 
 function exportSummaryReport(records) {
@@ -758,4 +801,31 @@ function formatReportDate(dateValue) {
   if (isNaN(d)) return dateValue;
 
   return d.toLocaleDateString('en-GB');
+}
+function parseRecordDate(value) {
+  if (!value) return null;
+
+  if (value instanceof Date) {
+    return value;
+  }
+
+  const str = value.toString().trim();
+
+  if (str.includes('/')) {
+    const parts = str.split('/');
+
+    if (parts.length === 3) {
+      const day = Number(parts[0]);
+      const month = Number(parts[1]) - 1;
+      const year = Number(parts[2]);
+
+      return new Date(year, month, day);
+    }
+  }
+
+  const d = new Date(str);
+
+  if (isNaN(d)) return null;
+
+  return d;
 }
