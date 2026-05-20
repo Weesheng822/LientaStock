@@ -380,75 +380,126 @@ function renderDashboard(data) {
 }
 
 function toggleExportFilters() {
-  const mode = document.getElementById('exportMode').value;
-  const filters = document.getElementById('exportFilters');
+
+  const mode =
+    document.getElementById('exportMode').value;
+
+  const filters =
+    document.getElementById('exportFilters');
 
   if (!filters) return;
 
   filters.style.display =
-    mode === 'date' || mode === 'technician'
+    mode === 'technician'
       ? 'block'
       : 'none';
+
 }
 
 function exportReport() {
-  const mode = document.getElementById('exportMode').value;
-  const selectedDate = document.getElementById('exportDate')?.value;
-  const selectedTech = document.getElementById('exportTechnician')?.value;
 
-  let records = window.allTransactions || window.todayTransactions || [];
+  const mode =
+    document.getElementById('exportMode').value;
 
+  const selectedTech =
+    document.getElementById('exportTechnician')?.value;
+
+  let records =
+    window.allTransactions ||
+    window.todayTransactions ||
+    [];
+
+  // TODAY
   if (mode === 'today') {
-    const today = new Date().toISOString().split('T')[0];
+
+    const today =
+      new Date().toISOString().split('T')[0];
 
     records = records.filter(r => {
-      const d = new Date(r.date).toISOString().split('T')[0];
+
+      const d =
+        new Date(r.date)
+        .toISOString()
+        .split('T')[0];
+
       return d === today;
+
     });
+
   }
 
-  if (mode === 'date') {
-    if (!selectedDate) {
-      alert('Please select date.');
-      return;
-    }
+  // FIRST HALF
+  if (mode === 'firstHalf') {
 
     records = records.filter(r => {
-      const d = new Date(r.date).toISOString().split('T')[0];
-      return d === selectedDate;
+
+      const d = new Date(r.date);
+
+      const day = d.getDate();
+
+      return day >= 1 && day <= 15;
+
     });
+
   }
 
+  // SECOND HALF
+  if (mode === 'secondHalf') {
+
+    records = records.filter(r => {
+
+      const d = new Date(r.date);
+
+      const day = d.getDate();
+
+      return day >= 16;
+
+    });
+
+  }
+
+  // TECHNICIAN
   if (mode === 'technician') {
+
     if (!selectedTech) {
+
       alert('Please select technician.');
+
       return;
+
     }
 
     records = records.filter(r => {
 
-  const tech1 =
-    (r.technician || '')
-    .toString()
-    .trim()
-    .toLowerCase();
+      const tech1 =
+        (r.technician || '')
+        .toString()
+        .trim()
+        .toLowerCase();
 
-  const tech2 =
-    (selectedTech || '')
-    .toString()
-    .trim()
-    .toLowerCase();
+      const tech2 =
+        (selectedTech || '')
+        .toString()
+        .trim()
+        .toLowerCase();
 
-  return tech1 === tech2;
+      return tech1 === tech2;
 
-});
+    });
 
+  }
+
+  // SUMMARY
   if (mode === 'summary') {
+
     exportSummaryReport(records);
+
     return;
+
   }
 
   printTransactionReport(records, mode);
+
 }
 
 function printTransactionReport(records, mode) {
@@ -593,4 +644,15 @@ function formatReportDate(dateValue) {
 
   return d.toLocaleDateString('en-GB');
 }
+function exportReport() {
+  const mode = document.getElementById('exportMode').value;
+
+  if (mode === 'summary') {
+    exportSummaryReport(window.allTransactions || window.todayTransactions || []);
+    return;
+  }
+
+  const records = window.allTransactions || window.todayTransactions || [];
+  printTransactionReport(records, mode);
 }
+
