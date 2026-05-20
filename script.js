@@ -857,3 +857,34 @@ function formatReportDate(dateValue) {
 
   return d.toLocaleDateString('en-GB');
 }
+function selectType(btn) {
+
+  const val = btn.dataset.val;
+
+  document.getElementById('type').value = val;
+
+  document.querySelectorAll('.type-btn').forEach(b => {
+    b.className = 'type-btn';
+
+    if (b === btn) {
+
+      if (val === 'IN') {
+        b.className += ' active-in';
+
+      } else if (val === 'OUT') {
+        b.className += ' active-out';
+
+      } else if (val === 'RETURN') {
+        b.className += ' active-ret';
+
+      } else if (val === 'ADJUST_IN') {
+        b.className += ' active-adj-in';
+
+      } else if (val === 'ADJUST_OUT') {
+        b.className += ' active-adj-out';
+      }
+    }
+  });
+
+  updateTypeBadge();
+}
