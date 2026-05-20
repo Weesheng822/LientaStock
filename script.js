@@ -425,8 +425,23 @@ function exportReport() {
       return;
     }
 
-    records = records.filter(r => r.technician === selectedTech);
-  }
+    records = records.filter(r => {
+
+  const tech1 =
+    (r.technician || '')
+    .toString()
+    .trim()
+    .toLowerCase();
+
+  const tech2 =
+    (selectedTech || '')
+    .toString()
+    .trim()
+    .toLowerCase();
+
+  return tech1 === tech2;
+
+});
 
   if (mode === 'summary') {
     exportSummaryReport(records);
@@ -577,4 +592,5 @@ function formatReportDate(dateValue) {
   if (isNaN(d)) return dateValue;
 
   return d.toLocaleDateString('en-GB');
+}
 }
