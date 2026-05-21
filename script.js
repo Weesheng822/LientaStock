@@ -118,15 +118,22 @@ async function submitForm() {
     ? document.getElementById('otherTechnician').value.trim()
     : technicianRaw;
 
-  if (!technicianRaw) {
-    alert('Please select technician.');
-    return;
-  }
+  if (
+  (type === 'OUT' || type === 'RETURN') &&
+  !technicianRaw
+) {
+  alert('Please select technician.');
+  return;
+}
 
-  if (technicianRaw === 'Other' && !technician) {
-    alert('Please enter technician name.');
-    return;
-  }
+  if (
+  (type === 'OUT' || type === 'RETURN') &&
+  technicianRaw === 'Other' &&
+  !technician
+) {
+  alert('Please enter technician name.');
+  return;
+}
 
   const submittedByRaw = document.getElementById('submittedBy').value;
   const submittedBy = submittedByRaw === 'Other'
@@ -829,7 +836,6 @@ function parseRecordDate(value) {
 
   return d;
 }
-
 function toggleRecentTransactions() {
 
   const wrapper =
