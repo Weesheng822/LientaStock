@@ -156,7 +156,7 @@ async function submitForm() {
 
   if (
     (type === 'ADJUST_IN' || type === 'ADJUST_OUT') &&
-    document.getElementById('adjustPassword').value !== 'Lienta@0615'
+    document.getElementById('adjustPassword').value !== 'lienta0615'
   ) {
     alert('Invalid admin password.');
     return;
