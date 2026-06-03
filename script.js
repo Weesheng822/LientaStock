@@ -10,10 +10,6 @@ window.onload = function () {
 
   document.getElementById('date').value = today;
 
-  if (document.getElementById('exportDate')) {
-    document.getElementById('exportDate').value = today;
-  }
-
   itemSelect.addEventListener('change', showStock);
   searchInput.addEventListener('input', filterItems);
 
@@ -57,7 +53,6 @@ async function loadItems() {
 
 function selectType(btn) {
   const val = btn.dataset.val;
-
   document.getElementById('type').value = val;
 
   document.querySelectorAll('.type-btn').forEach(b => {
@@ -118,22 +113,19 @@ async function submitForm() {
     ? document.getElementById('otherTechnician').value.trim()
     : technicianRaw;
 
-  if (
-  (type === 'OUT' || type === 'RETURN') &&
-  !technicianRaw
-) {
-  alert('Please select technician.');
-  return;
-}
+  if ((type === 'OUT' || type === 'RETURN') && !technicianRaw) {
+    alert('Please select technician.');
+    return;
+  }
 
   if (
-  (type === 'OUT' || type === 'RETURN') &&
-  technicianRaw === 'Other' &&
-  !technician
-) {
-  alert('Please enter technician name.');
-  return;
-}
+    (type === 'OUT' || type === 'RETURN') &&
+    technicianRaw === 'Other' &&
+    !technician
+  ) {
+    alert('Please enter technician name.');
+    return;
+  }
 
   const submittedByRaw = document.getElementById('submittedBy').value;
   const submittedBy = submittedByRaw === 'Other'
@@ -156,14 +148,14 @@ async function submitForm() {
 
   if (
     (type === 'ADJUST_IN' || type === 'ADJUST_OUT') &&
-    document.getElementById('adjustPassword').value !== 'lienta0615'
+    document.getElementById('adjustPassword').value !== 'Lienta@0615'
   ) {
     alert('Invalid admin password.');
     return;
   }
 
   const confirmSubmit = confirm(
-    `Confirm submit?\n\nType: ${type}\nItem: ${item.code} - ${item.name}\nQty: ${qty}\nTechnician: ${technician}`
+    `Confirm submit?\n\nType: ${type}\nItem: ${item.code} - ${item.name}\nQty: ${qty}\nTechnician: ${technician || '-'}`
   );
 
   if (!confirmSubmit) return;
@@ -409,47 +401,47 @@ function exportReport() {
   const year = now.getFullYear();
 
   if (mode === 'today') {
-  const today = new Date();
+    const today = new Date();
 
-  records = records.filter(r => {
-    const d = parseRecordDate(r.date);
+    records = records.filter(r => {
+      const d = parseRecordDate(r.date);
 
-    if (!d) return false;
+      if (!d) return false;
 
-    return (
-      d.getFullYear() === today.getFullYear() &&
-      d.getMonth() === today.getMonth() &&
-      d.getDate() === today.getDate()
-    );
-  });
+      return (
+        d.getFullYear() === today.getFullYear() &&
+        d.getMonth() === today.getMonth() &&
+        d.getDate() === today.getDate()
+      );
+    });
 
-  printTransactionReport(records, 'Today');
-  return;
-}
+    printTransactionReport(records, 'Today');
+    return;
+  }
 
   if (mode === 'firstHalf' || mode === 'secondHalf') {
     records = records.filter(r => {
-  const d = parseRecordDate(r.date);
+      const d = parseRecordDate(r.date);
 
-  if (!d) return false;
+      if (!d) return false;
 
-  if (
-    d.getFullYear() !== year ||
-    d.getMonth() !== month
-  ) {
-    return false;
-  }
+      if (
+        d.getFullYear() !== year ||
+        d.getMonth() !== month
+      ) {
+        return false;
+      }
 
-  if (mode === 'firstHalf') {
-    return d.getDate() >= 1 && d.getDate() <= 15;
-  }
+      if (mode === 'firstHalf') {
+        return d.getDate() >= 1 && d.getDate() <= 15;
+      }
 
-  if (mode === 'secondHalf') {
-    return d.getDate() >= 16 && d <= now;
-  }
+      if (mode === 'secondHalf') {
+        return d.getDate() >= 16 && d <= now;
+      }
 
-  return false;
-});
+      return false;
+    });
 
     if (selectedTech) {
       records = filterByTechnician(records, selectedTech);
@@ -466,7 +458,7 @@ function exportReport() {
   }
 
   if (mode === 'summary') {
-    exportSummaryReport(records);
+    exportSummaryReport();
     return;
   }
 }
@@ -479,179 +471,13 @@ function filterByTechnician(records, selectedTech) {
     return tech === selected;
   });
 }
+
 function isAdditionalPipeRemark(remark) {
   return (remark || '')
     .toString()
     .toLowerCase()
     .includes('additional pipe');
 }
-
-
-function printTransactionReport(records, mode) {
-  let html = `
-    <html>
-    <head>
-      <title>Lienta Inventory Report</title>
-      <style>
-        body { font-family: Arial; padding: 24px; }
-        h2 { margin-bottom: 8px; }
-        p { margin-bottom: 16px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
-        th { background: #f1f3f4; }
-      </style>
-    </head>
-    <body>
-      <h2>Lienta Inventory Report</h2>
-      <p>Report Type: ${mode}</p>
-
-      <table>
-        <tr>
-          <th>Date</th>
-          <th>Type</th>
-          <th>Item</th>
-          <th>Qty</th>
-          <th>Technician</th>
-          <th>Job No</th>
-          <th>Remark</th>
-          <th>Submitted By</th>
-        </tr>
-  `;
-
-  if (!records.length) {
-    html += `
-      <tr>
-        <td colspan="8" style="text-align:center;">No records found</td>
-      </tr>
-    `;
-  }
-
-  records.forEach(r => {
-
-  const highlightRow =
-    isAdditionalPipeRemark(r.remark)
-      ? 'background:#fff3cd; color:#856404; font-weight:bold;'
-      : '';
-
-  html += `
-    <tr style="${highlightRow}">
-      <td>${formatReportDate(r.date)}</td>
-      <td>${r.type || ''}</td>
-      <td>${r.itemCode || ''} - ${r.itemName || ''}</td>
-      <td>${r.qty || ''}</td>
-      <td>${r.technician || ''}</td>
-      <td>${r.jobNo || ''}</td>
-      <td>${r.remark || ''}</td>
-      <td>${r.submittedBy || ''}</td>
-    </tr>
-  `;
-});
-
-  html += `
-      </table>
-    </body>
-    </html>
-  `;
-
-  const w = window.open('', '_blank');
-  w.document.write(html);
-  w.document.close();
-  w.print();
-}
-
-function exportSummaryReport(records) {
-  const summary = {};
-
-  records.forEach(r => {
-    if (!r.technician) return;
-
-    const tech = r.technician;
-
-    if (!summary[tech]) {
-      summary[tech] = 0;
-    }
-
-    summary[tech] += Number(r.qty) || 0;
-  });
-
-  let html = `
-    <html>
-    <head>
-      <title>Lienta Summary Report</title>
-      <style>
-        body { font-family: Arial; padding: 24px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
-        th { background: #f1f3f4; }
-      </style>
-    </head>
-    <body>
-      <h2>Lienta Inventory Summary Report</h2>
-
-      <table>
-        <tr>
-          <th>Technician</th>
-          <th>Total Qty</th>
-        </tr>
-  `;
-
-  const techNames = Object.keys(summary);
-
-  if (!techNames.length) {
-    html += `
-      <tr>
-        <td colspan="2" style="text-align:center;">No records found</td>
-      </tr>
-    `;
-  }
-
-  techNames.forEach(tech => {
-    html += `
-      <tr>
-        <td>${tech}</td>
-        <td>${summary[tech]}</td>
-      </tr>
-    `;
-  });
-
-  html += `
-      </table>
-    </body>
-    </html>
-  `;
-
-  const w = window.open('', '_blank');
-  w.document.write(html);
-  w.document.close();
-  w.print();
-}
-
-function formatReportDate(dateValue) {
-  if (!dateValue) return '';
-
-  const d = new Date(dateValue);
-
-  if (isNaN(d)) return dateValue;
-
-  return d.toLocaleDateString('en-GB');
-}
-
-function filterByTechnician(records, selectedTech) {
-  const selected = selectedTech
-    .toString()
-    .trim()
-    .toLowerCase();
-
-  return records.filter(r => {
-    const tech = (r.technician || '')
-      .toString()
-      .trim()
-      .toLowerCase();
-
-    return tech === selected;
-  });
-}
-
 
 function printTransactionReport(records, mode) {
   let html = `
@@ -726,64 +552,57 @@ function printTransactionReport(records, mode) {
   w.print();
 }
 
-function isAdditionalPipeRemark(remark) {
-  return (remark || '')
-    .toString()
-    .toLowerCase()
-    .includes('additional pipe');
-}
-
-function exportSummaryReport(records) {
-  const summary = {};
-
-  records.forEach(r => {
-    if (!r.technician) return;
-
-    const tech = r.technician;
-
-    if (!summary[tech]) {
-      summary[tech] = 0;
-    }
-
-    summary[tech] += Number(r.qty) || 0;
-  });
-
+function exportSummaryReport() {
   let html = `
     <html>
     <head>
-      <title>Lienta Summary Report</title>
+      <title>Lienta Stock Balance Summary</title>
       <style>
         body { font-family: Arial; padding: 24px; }
+        h2 { margin-bottom: 8px; }
         table { width: 100%; border-collapse: collapse; }
         th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
         th { background: #f1f3f4; }
+        .low td {
+          background:#ffebee;
+          color:#c62828;
+          font-weight:bold;
+        }
       </style>
     </head>
     <body>
-      <h2>Lienta Inventory Summary Report</h2>
+      <h2>Lienta Stock Balance Summary</h2>
 
       <table>
         <tr>
-          <th>Technician</th>
-          <th>Total Qty</th>
+          <th>Item Code</th>
+          <th>Item Name</th>
+          <th>Current Stock</th>
+          <th>Min Stock</th>
+          <th>Status</th>
         </tr>
   `;
 
-  const techNames = Object.keys(summary);
-
-  if (!techNames.length) {
+  if (!allItems.length) {
     html += `
       <tr>
-        <td colspan="2" style="text-align:center;">No records found</td>
+        <td colspan="5" style="text-align:center;">No stock balance found</td>
       </tr>
     `;
   }
 
-  techNames.forEach(tech => {
+  allItems.forEach(item => {
+    const current = Number(item.currentStock || 0);
+    const min = Number(item.minStock || 0);
+    const isLow = current <= min;
+
     html += `
-      <tr>
-        <td>${tech}</td>
-        <td>${summary[tech]}</td>
+      <tr class="${isLow ? 'low' : ''}">
+        <td>${item.code || ''}</td>
+        <td>${item.name || ''}</td>
+        <td>${current} ${item.unit || ''}</td>
+        <td>${min}</td>
+        <td>${isLow ? 'LOW STOCK' : 'OK'}</td>
       </tr>
     `;
   });
@@ -801,14 +620,13 @@ function exportSummaryReport(records) {
 }
 
 function formatReportDate(dateValue) {
-  if (!dateValue) return '';
+  const d = parseRecordDate(dateValue);
 
-  const d = new Date(dateValue);
-
-  if (isNaN(d)) return dateValue;
+  if (!d) return dateValue || '';
 
   return d.toLocaleDateString('en-GB');
 }
+
 function parseRecordDate(value) {
   if (!value) return null;
 
@@ -836,10 +654,11 @@ function parseRecordDate(value) {
 
   return d;
 }
-function toggleRecentTransactions() {
 
-  const wrapper =
-    document.getElementById('recentListWrapper');
+function toggleRecentTransactions() {
+  const wrapper = document.getElementById('recentListWrapper');
+
+  if (!wrapper) return;
 
   wrapper.style.display =
     wrapper.style.display === 'none'
