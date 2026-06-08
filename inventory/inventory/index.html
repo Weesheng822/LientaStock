@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lienta Inventory Record</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div class="app">
+    <div class="app-header">
+      <div class="app-icon"><i class="ti ti-package"></i></div>
+      <div>
+        <div class="app-title">Lienta Inventory Record</div>
+        <div class="app-sub" id="todayDate"></div>
+      </div>
+      <div class="app-actions">
+        <button class="icon-btn" onclick="toggleDashboard()" title="Dashboard"><i class="ti ti-chart-bar"></i></button>
+        <select id="exportMode" class="icon-btn" style="width:auto; padding:0 8px;">
+          <option value="today">Today</option>
+          <option value="firstHalf">First Half</option>
+          <option value="secondHalf">Second Half</option>
+          <option value="summary">Summary</option>
+        </select>
+        <button class="icon-btn" onclick="exportReport()" title="Export Report"><i class="ti ti-download"></i></button>
+      </div>
+    </div>
+
+    <div class="dashboard" id="dashboardPanel">
+      <div class="dash-label">Today's Overview</div>
+      <div class="dash-grid" id="dashboardContent">
+        <div class="dash-card"><div class="dash-lbl">Total items</div><div class="dash-num" style="color:var(--brand);">-</div></div>
+        <div class="dash-card"><div class="dash-lbl">Low stock</div><div class="dash-num" style="color:var(--danger);">-</div></div>
+        <div class="dash-card"><div class="dash-lbl">Today IN</div><div class="dash-num" style="color:var(--success);">-</div></div>
+        <div class="dash-card"><div class="dash-lbl">Today OUT</div><div class="dash-num" style="color:var(--danger);">-</div></div>
+      </div>
+    </div>
+
+    <div class="dashboard" id="exportFilters" style="display:none;">
+      <div class="dash-label">Export Filters</div>
+      <div class="label">Technician</div>
+      <select id="exportTechnician"><option value="">All Technician</option></select>
+    </div>
+
+    <div class="section">
+      <div class="label">Transaction Type</div>
+      <div class="type-grid" id="typeGrid">
+        <button class="type-btn active-in" data-val="IN" onclick="selectType(this)"><i class="ti ti-arrow-bar-to-down"></i>IN</button>
+        <button class="type-btn" data-val="OUT" onclick="selectType(this)"><i class="ti ti-arrow-bar-up"></i>OUT</button>
+        <button class="type-btn" data-val="RETURN" onclick="selectType(this)"><i class="ti ti-refresh"></i>RETURN</button>
+        <button class="type-btn" data-val="ADJUST_IN" onclick="selectType(this)"><i class="ti ti-adjustments-horizontal"></i>ADJUST IN</button>
+        <button class="type-btn" data-val="ADJUST_OUT" onclick="selectType(this)"><i class="ti ti-adjustments-off"></i>ADJUST OUT</button>
+      </div>
+      <input type="hidden" id="type" value="IN">
+
+      <div class="admin-box" id="adjustPasswordSection">
+        <div class="admin-label"><i class="ti ti-lock"></i>Admin only - enter password to continue</div>
+        <input type="password" id="adjustPassword" placeholder="Admin password">
+      </div>
+
+      <div class="label">Date</div>
+      <input type="date" id="date">
+
+      <div class="label">Search Item</div>
+      <div class="search-wrap"><i class="ti ti-search"></i><input type="text" id="searchItem" placeholder="Search by code, name, or category..."></div>
+
+      <div class="label" style="margin-top:8px;">Select Item</div>
+      <select id="item"><option value="">Select item</option></select>
+
+      <div class="stock-pill" id="stockInfo"><span class="dot" style="background:rgba(0,0,0,0.2)"></span><span>Select an item to see stock level</span></div>
+
+      <div class="row2">
+        <div><div class="label">Quantity</div><input type="number" id="qty" min="1" placeholder="0"></div>
+        <div><div class="label">Job No.</div><input type="text" id="jobNo" placeholder="e.g. JB-0042"></div>
+      </div>
+
+      <div class="label">Technician</div>
+      <select id="technician"><option value="">Select technician</option></select>
+      <input type="text" id="otherTechnician" placeholder="Enter technician name" style="display:none; margin-top:8px;">
+
+      <div class="label">Remark</div>
+      <textarea id="remark" placeholder="Optional notes..."></textarea>
+
+      <div class="label">Submitted By</div>
+      <select id="submittedBy">
+        <option value="Office">Sanjeevi</option>
+        <option value="Wilson">Wilson</option>
+        <option value="Office">Ko</option>
+        <option value="Other">Other</option>
+      </select>
+      <input type="text" id="otherSubmitter" placeholder="Enter name" style="display:none; margin-top:8px;">
+    </div>
+
+    <div class="success-bar" id="successMsg"><i class="ti ti-circle-check"></i>Stock record submitted successfully.</div>
+    <button class="submit-btn" onclick="submitForm()"><i class="ti ti-send"></i>Submit record</button>
+    <div class="divider"></div>
+
+    <div class="recent-section">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div class="recent-title">Recent Transactions</div>
+        <button class="icon-btn" onclick="toggleRecentTransactions()" title="Toggle Recent Transactions"><i class="ti ti-history-toggle"></i></button>
+      </div>
+      <div id="recentListWrapper" style="display:none;"><div id="recentList"><div style="font-size:13px; color:var(--text2); padding:8px 0;">No records yet.</div></div></div>
+    </div>
+  </div>
+  <script src="../script.js"></script>
+</body>
+</html>
